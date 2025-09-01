@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lojistik Formu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f7fa;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
+            color: #34495e;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            margin-bottom: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: #3498db;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background: #2980b9;
+        }
+
+        .message {
+            margin-top: 15px;
+            text-align: center;
+            font-weight: bold;
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Lojistik Kayıt Formu</h2>
+        <form method="POST" action="/">
+            <label for="tarih">Tarih:</label>
+            <input type="text" id="tarih" name="tarih">
+
+            <label for="saat">İşlem Çıkış Saati:</label>
+            <input type="text" id="saat" name="saat">
+
+            <label for="plaka">Plaka:</label>
+            <input type="text" id="plaka" name="plaka">
+
+            <label for="cikis_km">Çıkış KM:</label>
+            <input type="text" id="cikis_km" name="cikis_km">
+
+            <label for="kumes_giris">Kümes Giriş Saati:</label>
+            <input type="text" id="kumes_giris" name="kumes_giris">
+
+            <label for="giris_km">Giriş KM:</label>
+            <input type="text" id="giris_km" name="giris_km">
+
+            <label for="kumes_cikis">Kümes Çıkış Saat:</label>
+            <input type="text" id="kumes_cikis" name="kumes_cikis">
+
+            <label for="isletme_km">İşletme Giriş KM:</label>
+            <input type="text" id="isletme_km" name="isletme_km">
+
+            <label for="isletme_saat">İşletme Giriş Saat:</label>
+            <input type="text" id="isletme_saat" name="isletme_saat">
+
+            <label for="fark_km">Fark KM:</label>
+            <input type="text" id="fark_km" name="fark_km">
+
+            <label for="uretici">Üretici:</label>
+            <input type="text" id="uretici" name="uretici">
+
+            <label for="uretici_km">Üretici KM:</label>
+            <input type="text" id="uretici_km" name="uretici_km">
+
+            <label for="tonaj">Tonaj:</label>
+            <input type="text" id="tonaj" name="tonaj">
+
+            <button type="submit">Kaydet</button>
+        </form>
+    </div>
+</body>
+</html>
