@@ -23,8 +23,8 @@ optree==0.16.0
 protobuf==5.29.5
 psycopg2-binary==2.9.10
 rich==14.0.0
-tensorboard==2.19.0
-tensorboard-data-server==0.7.2
+tensorboard==2.20.0
+tensorboard-data-server==0.8.0
 tensorflow==2.20.0rc0
 termcolor==3.1.0
 Werkzeug==3.1.3
