@@ -1,27 +1,41 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
-import psycopg2
+import pyodbc
 from datetime import datetime
+import os
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"  # Flash mesajları için
 
-# Veritabanı bağlantı bilgileri (Heroku Postgres veya Supabase)
-DB_HOST = "your_db_host"
-DB_NAME = "your_db_name"
-DB_USER = "your_db_user"
-DB_PASS = "your_db_password"
-DB_PORT = "5432"
+# -----------------------------
+# SQL Server Bağlantısı
+# -----------------------------
+DB_SERVER = r"NISA\SQLEXPRESS05"  # SQL Server instance adı
+DB_NAME = "lojistik"               # Veritabanı adı
+DB_TRUSTED_CONNECTION = True       # Şifre yoksa True, varsa False yapıp DB_USER ve DB_PASS ekle
 
 def get_connection():
-    conn = psycopg2.connect(
-        host=DB_HOST,
-        database=DB_NAME,
-        user=DB_USER,
-        password=DB_PASS,
-        port=DB_PORT
-    )
-    return conn
+    if DB_TRUSTED_CONNECTION:
+        conn_str = (
+            f'DRIVER={{ODBC Driver 18 for SQL Server}};'
+            f'SERVER={DB_SERVER};'
+            f'DATABASE={DB_NAME};'
+            f'Trusted_Connection=yes;'
+        )
+    else:
+        DB_USER = "kullanici_adi"
+        DB_PASS = "sifre"
+        conn_str = (
+            f'DRIVER={{ODBC Driver 18 for SQL Server}};'
+            f'SERVER={DB_SERVER};'
+            f'DATABASE={DB_NAME};'
+            f'UID={DB_USER};'
+            f'PWD={DB_PASS};'
+        )
+    return pyodbc.connect(conn_str)
 
+# -----------------------------
+# Ana Route
+# -----------------------------
 @app.route("/", methods=["GET", "POST"])
 def form():
     if request.method == "POST":
@@ -45,7 +59,7 @@ def form():
             sql = """INSERT INTO arac_kayitlari
                      (tarih, iscikissaat, plaka, cikiskm, kumgirissaat, giriskm, kumcikissaat,
                       isletmegiriskm, isletmegirissaat, farkkm, uretici, ureticikm, tonaj)
-                     VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
             cur.execute(sql, (tarih, iscikissaat, plaka, cikiskm, kumgirissaat, giriskm,
                               kumcikissaat, isletmegiriskm, isletmegirissaat, farkkm,
                               uretici, ureticikm, tonaj))
@@ -61,8 +75,9 @@ def form():
 
     return render_template("form.html")
 
-import os
-
+# -----------------------------
+# Uygulamayı Başlat
+# -----------------------------
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Render PORT'u kullan
+    port = int(os.environ.get("PORT", 5000))  # Render veya local için port
     app.run(host="0.0.0.0", port=port)
