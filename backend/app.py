@@ -1,37 +1,18 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
-import pyodbc
-from datetime import datetime
 import os
+import psycopg2
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"  # Flash mesajları için
 
 # -----------------------------
-# SQL Server Bağlantısı
+# Postgres Bağlantısı
 # -----------------------------
-DB_SERVER = r"NISA\SQLEXPRESS05"  # SQL Server instance adı
-DB_NAME = "lojistik"               # Veritabanı adı
-DB_TRUSTED_CONNECTION = True       # Şifre yoksa True, varsa False yapıp DB_USER ve DB_PASS ekle
+DB_URL = os.environ.get("DATABASE_URL")  # Render Environment Variable
 
 def get_connection():
-    if DB_TRUSTED_CONNECTION:
-        conn_str = (
-            f'DRIVER={{ODBC Driver 18 for SQL Server}};'
-            f'SERVER={DB_SERVER};'
-            f'DATABASE={DB_NAME};'
-            f'Trusted_Connection=yes;'
-        )
-    else:
-        DB_USER = "kullanici_adi"
-        DB_PASS = "sifre"
-        conn_str = (
-            f'DRIVER={{ODBC Driver 18 for SQL Server}};'
-            f'SERVER={DB_SERVER};'
-            f'DATABASE={DB_NAME};'
-            f'UID={DB_USER};'
-            f'PWD={DB_PASS};'
-        )
-    return pyodbc.connect(conn_str)
+    return psycopg2.connect(DB_URL)
 
 # -----------------------------
 # Ana Route
@@ -40,6 +21,7 @@ def get_connection():
 def form():
     if request.method == "POST":
         try:
+            # Form verilerini al
             tarih = request.form.get("tarih") or datetime.now().strftime("%Y-%m-%d")
             iscikissaat = request.form.get("iscikissaat") or "00:00"
             plaka = request.form.get("plaka")
@@ -54,12 +36,13 @@ def form():
             ureticikm = float(request.form.get("ureticikm") or 0)
             tonaj = int(request.form.get("tonaj") or 0)
 
+            # Veritabanına kaydet
             conn = get_connection()
             cur = conn.cursor()
             sql = """INSERT INTO arac_kayitlari
                      (tarih, iscikissaat, plaka, cikiskm, kumgirissaat, giriskm, kumcikissaat,
                       isletmegiriskm, isletmegirissaat, farkkm, uretici, ureticikm, tonaj)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
             cur.execute(sql, (tarih, iscikissaat, plaka, cikiskm, kumgirissaat, giriskm,
                               kumcikissaat, isletmegiriskm, isletmegirissaat, farkkm,
                               uretici, ureticikm, tonaj))
