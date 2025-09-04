@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 import os
-import psycopg2
+import psycopg
 from datetime import datetime
 
 app = Flask(__name__)
@@ -12,7 +12,7 @@ app.secret_key = "supersecretkey"  # Flash mesajları için
 DB_URL = os.environ.get("DATABASE_URL")  # Render Environment Variable
 
 def get_connection():
-    return psycopg2.connect(DB_URL)
+    return psycopg.connect(DB_URL)
 
 # -----------------------------
 # Ana Route
@@ -37,18 +37,15 @@ def form():
             tonaj = int(request.form.get("tonaj") or 0)
 
             # Veritabanına kaydet
-            conn = get_connection()
-            cur = conn.cursor()
-            sql = """INSERT INTO arac_kayitlari
-                     (tarih, iscikissaat, plaka, cikiskm, kumgirissaat, giriskm, kumcikissaat,
-                      isletmegiriskm, isletmegirissaat, farkkm, uretici, ureticikm, tonaj)
-                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
-            cur.execute(sql, (tarih, iscikissaat, plaka, cikiskm, kumgirissaat, giriskm,
-                              kumcikissaat, isletmegiriskm, isletmegirissaat, farkkm,
-                              uretici, ureticikm, tonaj))
-            conn.commit()
-            cur.close()
-            conn.close()
+            with get_connection() as conn:
+                with conn.cursor() as cur:
+                    sql = """INSERT INTO arac_kayitlari
+                             (tarih, iscikissaat, plaka, cikiskm, kumgirissaat, giriskm, kumcikissaat,
+                              isletmegiriskm, isletmegirissaat, farkkm, uretici, ureticikm, tonaj)
+                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+                    cur.execute(sql, (tarih, iscikissaat, plaka, cikiskm, kumgirissaat, giriskm,
+                                      kumcikissaat, isletmegiriskm, isletmegirissaat, farkkm,
+                                      uretici, ureticikm, tonaj))
 
             flash("Kayıt başarıyla eklendi!", "success")
             return redirect(url_for("form"))
