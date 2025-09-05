@@ -13,6 +13,9 @@ DB_NAME = "postgres"
 DB_PORT = 5432
 
 DB_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}?sslmode=require"
+DB_HOSTADDR=socket.gethostbyname(DB_HOST)
+psycopg.connect(DB_URL,hostaddr=DB_HOSTADDR,connect_timeour=8)
+
 
 def get_connection():
     return psycopg.connect(DB_URL, autocommit=True)
