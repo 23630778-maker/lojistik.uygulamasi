@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 import os
 import psycopg
 from datetime import datetime
+from urllib.parse import quote_plus
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"  # Flash mesajları için
@@ -9,10 +10,20 @@ app.secret_key = "supersecretkey"  # Flash mesajları için
 # -----------------------------
 # Postgres Bağlantısı
 # -----------------------------
-DB_URL = os.environ.get("DATABASE_URL")  # Render Environment Variable
+DB_USER = "postgres"
+DB_PASS = quote_plus("Nisa2025Secure")  # Şifre özel karakter içeriyorsa encode et
+DB_HOST = "db.mjnpmjfuinztssstvqsu.supabase.co"
+DB_NAME = "postgres"
+DB_PORT = 5432
+
+DB_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 def get_connection():
-    return psycopg.connect(DB_URL)
+    try:
+        return psycopg.connect(DB_URL, autocommit=True)
+    except Exception as e:
+        print(f"DB bağlantısı kurulamadı: {e}")
+        raise
 
 # -----------------------------
 # Ana Route
