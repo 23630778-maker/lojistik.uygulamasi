@@ -69,53 +69,73 @@
             background: #2980b9;
         }
 
-        .message {
+        /* Flash mesajları için */
+        .flash {
             margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
             text-align: center;
             font-weight: bold;
-            color: green;
+        }
+        .success {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .danger {
+            background-color: #e74c3c;
+            color: white;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Lojistik Kayıt Formu</h2>
+
+        <!-- Flash mesajlarını göster -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
         <form method="POST" action="/">
             <label for="tarih">Tarih:</label>
             <input type="text" id="tarih" name="tarih">
 
-            <label for="saat">İşlem Çıkış Saati:</label>
-            <input type="text" id="saat" name="saat">
+            <label for="iscikissaat">İşlem Çıkış Saati:</label>
+            <input type="text" id="iscikissaat" name="iscikissaat">
 
             <label for="plaka">Plaka:</label>
             <input type="text" id="plaka" name="plaka">
 
-            <label for="cikis_km">Çıkış KM:</label>
-            <input type="text" id="cikis_km" name="cikis_km">
+            <label for="cikiskm">Çıkış KM:</label>
+            <input type="text" id="cikiskm" name="cikiskm">
 
-            <label for="kumes_giris">Kümes Giriş Saati:</label>
-            <input type="text" id="kumes_giris" name="kumes_giris">
+            <label for="kumgirissaat">Kümes Giriş Saati:</label>
+            <input type="text" id="kumgirissaat" name="kumgirissaat">
 
-            <label for="giris_km">Giriş KM:</label>
-            <input type="text" id="giris_km" name="giris_km">
+            <label for="giriskm">Giriş KM:</label>
+            <input type="text" id="giriskm" name="giriskm">
 
-            <label for="kumes_cikis">Kümes Çıkış Saat:</label>
-            <input type="text" id="kumes_cikis" name="kumes_cikis">
+            <label for="kumcikissaat">Kümes Çıkış Saati:</label>
+            <input type="text" id="kumcikissaat" name="kumcikissaat">
 
-            <label for="isletme_km">İşletme Giriş KM:</label>
-            <input type="text" id="isletme_km" name="isletme_km">
+            <label for="isletmegiriskm">İşletme Giriş KM:</label>
+            <input type="text" id="isletmegiriskm" name="isletmegiriskm">
 
-            <label for="isletme_saat">İşletme Giriş Saat:</label>
-            <input type="text" id="isletme_saat" name="isletme_saat">
+            <label for="isletmegirissaat">İşletme Giriş Saati:</label>
+            <input type="text" id="isletmegirissaat" name="isletmegirissaat">
 
-            <label for="fark_km">Fark KM:</label>
-            <input type="text" id="fark_km" name="fark_km">
+            <label for="farkkm">Fark KM:</label>
+            <input type="text" id="farkkm" name="farkkm">
 
             <label for="uretici">Üretici:</label>
             <input type="text" id="uretici" name="uretici">
 
-            <label for="uretici_km">Üretici KM:</label>
-            <input type="text" id="uretici_km" name="uretici_km">
+            <label for="ureticikm">Üretici KM:</label>
+            <input type="text" id="ureticikm" name="ureticikm">
 
             <label for="tonaj">Tonaj:</label>
             <input type="text" id="tonaj" name="tonaj">
