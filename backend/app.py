@@ -2,24 +2,36 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 import psycopg
 from datetime import datetime
 from urllib.parse import quote_plus
+import socket  # <-- DNS çözümleme için
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
+# -----------------------------
+# Postgres Bağlantısı
+# -----------------------------
 DB_USER = "postgres"
 DB_PASS = quote_plus("Nisa2025Secure")
 DB_HOST = "db.mjnpmjfuinztssstvqsu.supabase.co"
 DB_NAME = "postgres"
 DB_PORT = 5432
 
-DB_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}?sslmode=require"
-DB_HOSTADDR=socket.gethostbyname(DB_HOST)
-psycopg.connect(DB_URL,hostaddr=DB_HOSTADDR,connect_timeour=8)
+# DNS çözümlemesi ile IP al
+DB_HOSTADDR = socket.gethostbyname(DB_HOST)
 
+# IP kullanarak URL oluştur, SSL modunu zorunlu kıl
+DB_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOSTADDR}:{DB_PORT}/{DB_NAME}?sslmode=require"
 
 def get_connection():
-    return psycopg.connect(DB_URL, autocommit=True)
+    try:
+        return psycopg.connect(DB_URL, autocommit=True)
+    except Exception as e:
+        print(f"DB bağlantısı kurulamadı: {e}")
+        raise
 
+# -----------------------------
+# Ana Route
+# -----------------------------
 @app.route("/", methods=["GET", "POST"])
 def form():
     if request.method == "POST":
@@ -55,6 +67,7 @@ def form():
             return redirect(url_for("form"))
 
     return render_template("form.html")
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
