@@ -1,38 +1,26 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
-import os
 import psycopg
 from datetime import datetime
 from urllib.parse import quote_plus
 
 app = Flask(__name__)
-app.secret_key = "supersecretkey"  # Flash mesajları için
+app.secret_key = "supersecretkey"
 
-# -----------------------------
-# Postgres Bağlantısı
-# -----------------------------
 DB_USER = "postgres"
-DB_PASS = quote_plus("Nisa2025Secure")  # Şifre özel karakter içeriyorsa encode et
+DB_PASS = quote_plus("Nisa2025Secure")
 DB_HOST = "db.mjnpmjfuinztssstvqsu.supabase.co"
 DB_NAME = "postgres"
 DB_PORT = 5432
 
-DB_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+DB_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}?sslmode=require"
 
 def get_connection():
-    try:
-        return psycopg.connect(DB_URL, autocommit=True)
-    except Exception as e:
-        print(f"DB bağlantısı kurulamadı: {e}")
-        raise
+    return psycopg.connect(DB_URL, autocommit=True)
 
-# -----------------------------
-# Ana Route
-# -----------------------------
 @app.route("/", methods=["GET", "POST"])
 def form():
     if request.method == "POST":
         try:
-            # Form verilerini al
             tarih = request.form.get("tarih") or datetime.now().strftime("%Y-%m-%d")
             iscikissaat = request.form.get("iscikissaat") or "00:00"
             plaka = request.form.get("plaka")
@@ -47,7 +35,6 @@ def form():
             ureticikm = float(request.form.get("ureticikm") or 0)
             tonaj = int(request.form.get("tonaj") or 0)
 
-            # Veritabanına kaydet
             with get_connection() as conn:
                 with conn.cursor() as cur:
                     sql = """INSERT INTO arac_kayitlari
@@ -66,9 +53,5 @@ def form():
 
     return render_template("form.html")
 
-# -----------------------------
-# Uygulamayı Başlat
-# -----------------------------
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=5000)
