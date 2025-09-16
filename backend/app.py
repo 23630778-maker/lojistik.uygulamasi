@@ -1,13 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
-import pandas as pd
 from datetime import datetime
 import os
+from openpyxl import Workbook, load_workbook
 
 app = Flask(__name__)
-app.secret_key = "supersecretkey"  # Flash mesajları için
+app.secret_key = "supersecretkey"
 
-# Burada tam yolunu yazıyoruz
-EXCEL_FILE = r"C:\Users\nisak\OneDrive\lojistik.xlsx"
+# Excel dosyanın tam yolu
+EXCEL_FILE = os.path.join(os.path.dirname(__file__), "lojistik.xlsx")
 
 @app.route("/", methods=["GET", "POST"])
 def form():
@@ -28,32 +28,29 @@ def form():
             ureticikm = float(request.form.get("ureticikm") or 0)
             tonaj = int(request.form.get("tonaj") or 0)
 
-            # Verileri sözlük olarak hazırla
-            data = {
-                "tarih": tarih,
-                "iscikissaat": iscikissaat,
-                "plaka": plaka,
-                "cikiskm": cikiskm,
-                "kumgirissaat": kumgirissaat,
-                "giriskm": giriskm,
-                "kumcikissaat": kumcikissaat,
-                "isletmegiriskm": isletmegiriskm,
-                "isletmegirissaat": isletmegirissaat,
-                "farkkm": farkkm,
-                "uretici": uretici,
-                "ureticikm": ureticikm,
-                "tonaj": tonaj
-            }
-
             # Excel dosyası var mı kontrol et
             if os.path.exists(EXCEL_FILE):
-                df = pd.read_excel(EXCEL_FILE)
-                df = pd.concat([df, pd.DataFrame([data])], ignore_index=True)
+                wb = load_workbook(EXCEL_FILE)
+                ws = wb.active
             else:
-                df = pd.DataFrame([data])
+                wb = Workbook()
+                ws = wb.active
+                # Başlıkları ekle
+                ws.append([
+                    "tarih", "iscikissaat", "plaka", "cikiskm", "kumgirissaat",
+                    "giriskm", "kumcikissaat", "isletmegiriskm", "isletmegirissaat",
+                    "farkkm", "uretici", "ureticikm", "tonaj"
+                ])
 
-            # Excel'e kaydet
-            df.to_excel(EXCEL_FILE, index=False)
+            # Yeni veriyi ekle
+            ws.append([
+                tarih, iscikissaat, plaka, cikiskm, kumgirissaat,
+                giriskm, kumcikissaat, isletmegiriskm, isletmegirissaat,
+                farkkm, uretici, ureticikm, tonaj
+            ])
+
+            # Kaydet
+            wb.save(EXCEL_FILE)
 
             flash("Kayıt başarıyla eklendi!", "success")
             return redirect(url_for("form"))
