@@ -1,41 +1,19 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
-import psycopg
+import pandas as pd
 from datetime import datetime
-from urllib.parse import quote_plus
-import socket  # <-- DNS çözümleme için
+import os
 
 app = Flask(__name__)
-app.secret_key = "supersecretkey"
+app.secret_key = "supersecretkey"  # Flash mesajları için
 
-# -----------------------------
-# Postgres Bağlantısı
-# -----------------------------
-DB_USER = "postgres"
-DB_PASS = quote_plus("Nisa2025Secure")
-DB_HOST = "db.mjnpmjfuinztssstvqsu.supabase.co"
-DB_NAME = "postgres"
-DB_PORT = 5432
+# Burada tam yolunu yazıyoruz
+EXCEL_FILE = r"C:\Users\nisak\OneDrive\lojistik.xlsx"
 
-# DNS çözümlemesi ile IP al
-DB_HOSTADDR = socket.gethostbyname(DB_HOST)
-
-# IP kullanarak URL oluştur, SSL modunu zorunlu kıl
-DB_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOSTADDR}:{DB_PORT}/{DB_NAME}?sslmode=require"
-
-def get_connection():
-    try:
-        return psycopg.connect(DB_URL, autocommit=True)
-    except Exception as e:
-        print(f"DB bağlantısı kurulamadı: {e}")
-        raise
-
-# -----------------------------
-# Ana Route
-# -----------------------------
 @app.route("/", methods=["GET", "POST"])
 def form():
     if request.method == "POST":
         try:
+            # Form verilerini al
             tarih = request.form.get("tarih") or datetime.now().strftime("%Y-%m-%d")
             iscikissaat = request.form.get("iscikissaat") or "00:00"
             plaka = request.form.get("plaka")
@@ -50,24 +28,42 @@ def form():
             ureticikm = float(request.form.get("ureticikm") or 0)
             tonaj = int(request.form.get("tonaj") or 0)
 
-            with get_connection() as conn:
-                with conn.cursor() as cur:
-                    sql = """INSERT INTO arac_kayitlari
-                             (tarih, iscikissaat, plaka, cikiskm, kumgirissaat, giriskm, kumcikissaat,
-                              isletmegiriskm, isletmegirissaat, farkkm, uretici, ureticikm, tonaj)
-                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
-                    cur.execute(sql, (tarih, iscikissaat, plaka, cikiskm, kumgirissaat, giriskm,
-                                      kumcikissaat, isletmegiriskm, isletmegirissaat, farkkm,
-                                      uretici, ureticikm, tonaj))
+            # Verileri sözlük olarak hazırla
+            data = {
+                "tarih": tarih,
+                "iscikissaat": iscikissaat,
+                "plaka": plaka,
+                "cikiskm": cikiskm,
+                "kumgirissaat": kumgirissaat,
+                "giriskm": giriskm,
+                "kumcikissaat": kumcikissaat,
+                "isletmegiriskm": isletmegiriskm,
+                "isletmegirissaat": isletmegirissaat,
+                "farkkm": farkkm,
+                "uretici": uretici,
+                "ureticikm": ureticikm,
+                "tonaj": tonaj
+            }
+
+            # Excel dosyası var mı kontrol et
+            if os.path.exists(EXCEL_FILE):
+                df = pd.read_excel(EXCEL_FILE)
+                df = pd.concat([df, pd.DataFrame([data])], ignore_index=True)
+            else:
+                df = pd.DataFrame([data])
+
+            # Excel'e kaydet
+            df.to_excel(EXCEL_FILE, index=False)
 
             flash("Kayıt başarıyla eklendi!", "success")
             return redirect(url_for("form"))
+
         except Exception as e:
             flash(f"Hata oluştu: {e}", "danger")
             return redirect(url_for("form"))
 
     return render_template("form.html")
 
-
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
