@@ -4,7 +4,7 @@ import os
 import io
 import openpyxl
 from openpyxl import Workbook, load_workbook
-import shutil  # Lokal → OneDrive kopyalama
+import shutil
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
@@ -12,19 +12,25 @@ from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
+# -------------------------
+# Dosya yolları
+# -------------------------
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CREDENTIALS_FILE = r"C:/Users/nisak/OneDrive/credentials.json"  # Google client secret
+EXCEL_FILE_LOCAL = r"C:/Users/nisak/OneDrive/lojistik.xlsx"     # Lokal Excel dosyası
+EXCEL_FILE_ONEDRIVE = os.path.join(BASE_DIR, "OneDrive_lojistik.xlsx")  # Yedek kopya
 
-EXCEL_FILE_LOCAL = r"C:/Users/nisak/OneDrive/lojistik.xlsx"
-EXCEL_FILE_ONEDRIVE =  r"C:/Users/nisak/OneDrive/lojistik.xlsx" 
-
-
-EXCEL_FILE_DRIVE_ID = "1Rvg3nQkHsVjh9QicnU5ViYvzJm1EwO8T"
+# -------------------------
+# Google Drive ayarları
+# -------------------------
+EXCEL_FILE_DRIVE_ID = "1Rvg3nQkHsVjh9QicnU5ViYvzJm1EwO8T"  # Drive Excel ID
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
-CREDENTIALS_FILE = "credentials.json"  
 
-
+# -------------------------
+# Google Drive servis fonksiyonları
+# -------------------------
 def get_drive_service():
-    flow = InstalledAppFlow.from_client_secrets_file(
-        CREDENTIALS_FILE, SCOPES)
+    flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
     creds = flow.run_local_server(port=0)
     service = build('drive', 'v3', credentials=creds)
     return service
@@ -50,12 +56,14 @@ def upload_excel(service, file_id, wb):
     )
     service.files().update(fileId=file_id, media_body=media).execute()
 
-
+# -------------------------
+# Ana route
+# -------------------------
 @app.route("/", methods=["GET", "POST"])
 def form():
     if request.method == "POST":
         try:
-            
+            # Form verilerini al
             tarih = request.form.get("tarih") or datetime.now().strftime("%Y-%m-%d")
             iscikissaat = request.form.get("iscikissaat") or "00:00"
             plaka = request.form.get("plaka")
@@ -70,7 +78,9 @@ def form():
             ureticikm = float(request.form.get("ureticikm") or 0)
             tonaj = int(request.form.get("tonaj") or 0)
 
-           
+            # -------------------------
+            # Lokal Excel kaydı
+            # -------------------------
             if not os.path.exists(EXCEL_FILE_LOCAL):
                 wb = Workbook()
                 ws = wb.active
@@ -91,7 +101,9 @@ def form():
             wb.save(EXCEL_FILE_LOCAL)
             shutil.copy(EXCEL_FILE_LOCAL, EXCEL_FILE_ONEDRIVE)
 
-           
+            # -------------------------
+            # Google Drive kaydı
+            # -------------------------
             service = get_drive_service()
             wb_drive = download_excel(service, EXCEL_FILE_DRIVE_ID)
             ws_drive = wb_drive.active
@@ -111,7 +123,9 @@ def form():
 
     return render_template("form.html")
 
-
+# -------------------------
+# Uygulama başlatma
+# -------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
