@@ -12,21 +12,19 @@ from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
-# Excel dosyalarının yolları
-# Excel dosyaları
-EXCEL_FILE_LOCAL = r"C:/Users/nisak/OneDrive/lojistik.xlsx" 
-EXCEL_FILE_ONEDRIVE = r"C:/Users/nisak/OneDrive/lojistik.xlsx"
+
+EXCEL_FILE_LOCAL = r"C:/Users/nisak/OneDrive/lojistik.xlsx"
+EXCEL_FILE_ONEDRIVE =  r"C:/Users/nisak/OneDrive/lojistik.xlsx" 
 
 
-# Google Drive Excel file ID
-EXCEL_FILE_DRIVE_ID = "BURAYA_DRIVE_FILE_ID"  # Google Drive dosya ID
-
-# Google Drive API scope
+EXCEL_FILE_DRIVE_ID = "1Rvg3nQkHsVjh9QicnU5ViYvzJm1EwO8T"
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
+CREDENTIALS_FILE = "credentials.json"  
+
 
 def get_drive_service():
     flow = InstalledAppFlow.from_client_secrets_file(
-        'credentials.json', SCOPES)
+        CREDENTIALS_FILE, SCOPES)
     creds = flow.run_local_server(port=0)
     service = build('drive', 'v3', credentials=creds)
     return service
@@ -46,14 +44,18 @@ def upload_excel(service, file_id, wb):
     fh = io.BytesIO()
     wb.save(fh)
     fh.seek(0)
-    media = MediaIoBaseUpload(fh, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    media = MediaIoBaseUpload(
+        fh,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
     service.files().update(fileId=file_id, media_body=media).execute()
+
 
 @app.route("/", methods=["GET", "POST"])
 def form():
     if request.method == "POST":
         try:
-            # Form verilerini al
+            
             tarih = request.form.get("tarih") or datetime.now().strftime("%Y-%m-%d")
             iscikissaat = request.form.get("iscikissaat") or "00:00"
             plaka = request.form.get("plaka")
@@ -68,33 +70,28 @@ def form():
             ureticikm = float(request.form.get("ureticikm") or 0)
             tonaj = int(request.form.get("tonaj") or 0)
 
-            # -----------------------------
-            # Lokal ve OneDrive kaydı
-            # -----------------------------
-            if os.path.exists(EXCEL_FILE_LOCAL):
-                wb = load_workbook(EXCEL_FILE_LOCAL)
-                ws = wb.active
-            else:
+           
+            if not os.path.exists(EXCEL_FILE_LOCAL):
                 wb = Workbook()
                 ws = wb.active
                 ws.append([
-                    "tarih", "iscikissaat", "plaka", "cikiskm", "kumgirissaat",
-                    "giriskm", "kumcikissaat", "isletmegiriskm", "isletmegirissaat",
-                    "farkkm", "uretici", "ureticikm", "tonaj"
+                    "tarih","iscikissaat","plaka","cikiskm","kumgirissaat",
+                    "giriskm","kumcikissaat","isletmegiriskm","isletmegirissaat",
+                    "farkkm","uretici","ureticikm","tonaj"
                 ])
+                wb.save(EXCEL_FILE_LOCAL)
 
+            wb = load_workbook(EXCEL_FILE_LOCAL)
+            ws = wb.active
             ws.append([
                 tarih, iscikissaat, plaka, cikiskm, kumgirissaat,
                 giriskm, kumcikissaat, isletmegiriskm, isletmegirissaat,
                 farkkm, uretici, ureticikm, tonaj
             ])
-
             wb.save(EXCEL_FILE_LOCAL)
             shutil.copy(EXCEL_FILE_LOCAL, EXCEL_FILE_ONEDRIVE)
 
-            # -----------------------------
-            # Google Drive kaydı
-            # -----------------------------
+           
             service = get_drive_service()
             wb_drive = download_excel(service, EXCEL_FILE_DRIVE_ID)
             ws_drive = wb_drive.active
@@ -113,6 +110,7 @@ def form():
             return redirect(url_for("form"))
 
     return render_template("form.html")
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
