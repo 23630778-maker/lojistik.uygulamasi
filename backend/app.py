@@ -2,13 +2,14 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from datetime import datetime
 import os
 from openpyxl import Workbook, load_workbook
+import shutil  # Kopyalama için gerekli
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
-# Excel dosyanın tam yolu
-EXCEL_FILE = r"C:\Users\nisak\OneDrive\lojistik.xlsx"
-
+# Excel dosyalarının yolları
+EXCEL_FILE_LOCAL = r"C:\Users\nisak\Desktop\lojistik.xlsx"
+EXCEL_FILE_ONEDRIVE = r"C:\Users\nisak\OneDrive\lojistik.xlsx"
 
 @app.route("/", methods=["GET", "POST"])
 def form():
@@ -29,9 +30,9 @@ def form():
             ureticikm = float(request.form.get("ureticikm") or 0)
             tonaj = int(request.form.get("tonaj") or 0)
 
-            # Excel dosyası var mı kontrol et
-            if os.path.exists(EXCEL_FILE):
-                wb = load_workbook(EXCEL_FILE)
+            # Excel dosyası var mı kontrol et (önce lokal)
+            if os.path.exists(EXCEL_FILE_LOCAL):
+                wb = load_workbook(EXCEL_FILE_LOCAL)
                 ws = wb.active
             else:
                 wb = Workbook()
@@ -50,10 +51,13 @@ def form():
                 farkkm, uretici, ureticikm, tonaj
             ])
 
-            # Kaydet
-            wb.save(EXCEL_FILE)
+            # Önce lokal kaydet
+            wb.save(EXCEL_FILE_LOCAL)
 
-            flash("Kayıt başarıyla eklendi!", "success")
+            # Sonra OneDrive klasörüne kopyala
+            shutil.copy(EXCEL_FILE_LOCAL, EXCEL_FILE_ONEDRIVE)
+
+            flash("Kayıt başarıyla eklendi ve OneDrive’a kaydedildi!", "success")
             return redirect(url_for("form"))
 
         except Exception as e:
