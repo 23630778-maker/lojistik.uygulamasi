@@ -1,8 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from datetime import datetime
 import os
+import io
+import openpyxl
 from openpyxl import Workbook, load_workbook
-import shutil  # Kopyalama için gerekli
+import shutil  # Lokal → OneDrive kopyalama
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
@@ -10,6 +15,37 @@ app.secret_key = "supersecretkey"
 # Excel dosyalarının yolları
 EXCEL_FILE_LOCAL = r"C:\Users\nisak\Desktop\lojistik.xlsx"
 EXCEL_FILE_ONEDRIVE = r"C:\Users\nisak\OneDrive\lojistik.xlsx"
+
+# Google Drive Excel file ID
+EXCEL_FILE_DRIVE_ID = "BURAYA_DRIVE_FILE_ID"  # Google Drive dosya ID
+
+# Google Drive API scope
+SCOPES = ['https://www.googleapis.com/auth/drive.file']
+
+def get_drive_service():
+    flow = InstalledAppFlow.from_client_secrets_file(
+        'credentials.json', SCOPES)
+    creds = flow.run_local_server(port=0)
+    service = build('drive', 'v3', credentials=creds)
+    return service
+
+def download_excel(service, file_id):
+    request = service.files().get_media(fileId=file_id)
+    fh = io.BytesIO()
+    downloader = MediaIoBaseDownload(fh, request)
+    done = False
+    while not done:
+        status, done = downloader.next_chunk()
+    fh.seek(0)
+    wb = openpyxl.load_workbook(fh)
+    return wb
+
+def upload_excel(service, file_id, wb):
+    fh = io.BytesIO()
+    wb.save(fh)
+    fh.seek(0)
+    media = MediaIoBaseUpload(fh, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    service.files().update(fileId=file_id, media_body=media).execute()
 
 @app.route("/", methods=["GET", "POST"])
 def form():
@@ -30,34 +66,44 @@ def form():
             ureticikm = float(request.form.get("ureticikm") or 0)
             tonaj = int(request.form.get("tonaj") or 0)
 
-            # Excel dosyası var mı kontrol et (önce lokal)
+            # -----------------------------
+            # Lokal ve OneDrive kaydı
+            # -----------------------------
             if os.path.exists(EXCEL_FILE_LOCAL):
                 wb = load_workbook(EXCEL_FILE_LOCAL)
                 ws = wb.active
             else:
                 wb = Workbook()
                 ws = wb.active
-                # Başlıkları ekle
                 ws.append([
                     "tarih", "iscikissaat", "plaka", "cikiskm", "kumgirissaat",
                     "giriskm", "kumcikissaat", "isletmegiriskm", "isletmegirissaat",
                     "farkkm", "uretici", "ureticikm", "tonaj"
                 ])
 
-            # Yeni veriyi ekle
             ws.append([
                 tarih, iscikissaat, plaka, cikiskm, kumgirissaat,
                 giriskm, kumcikissaat, isletmegiriskm, isletmegirissaat,
                 farkkm, uretici, ureticikm, tonaj
             ])
 
-            # Önce lokal kaydet
             wb.save(EXCEL_FILE_LOCAL)
-
-            # Sonra OneDrive klasörüne kopyala
             shutil.copy(EXCEL_FILE_LOCAL, EXCEL_FILE_ONEDRIVE)
 
-            flash("Kayıt başarıyla eklendi ve OneDrive’a kaydedildi!", "success")
+            # -----------------------------
+            # Google Drive kaydı
+            # -----------------------------
+            service = get_drive_service()
+            wb_drive = download_excel(service, EXCEL_FILE_DRIVE_ID)
+            ws_drive = wb_drive.active
+            ws_drive.append([
+                tarih, iscikissaat, plaka, cikiskm, kumgirissaat,
+                giriskm, kumcikissaat, isletmegiriskm, isletmegirissaat,
+                farkkm, uretici, ureticikm, tonaj
+            ])
+            upload_excel(service, EXCEL_FILE_DRIVE_ID, wb_drive)
+
+            flash("Kayıt başarıyla eklendi, OneDrive ve Google Drive’a kaydedildi!", "success")
             return redirect(url_for("form"))
 
         except Exception as e:
@@ -68,4 +114,4 @@ def form():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, debug=True)
