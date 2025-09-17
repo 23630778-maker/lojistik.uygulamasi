@@ -14,8 +14,8 @@ app.secret_key = "supersecretkey"
 
 # Excel dosyalarının yolları
 # Excel dosyaları
-EXCEL_FILE_LOCAL = "C:/Users/nisak/OneDrive/lojistik.xlsx" 
-EXCEL_FILE_ONEDRIVE = "C:/Users/nisak/OneDrive/lojistik.xlsx"
+EXCEL_FILE_LOCAL = r"C:/Users/nisak/OneDrive/lojistik.xlsx" 
+EXCEL_FILE_ONEDRIVE = r"C:/Users/nisak/OneDrive/lojistik.xlsx"
 
 
 # Google Drive Excel file ID
