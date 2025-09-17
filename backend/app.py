@@ -7,7 +7,8 @@ app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
 # Excel dosyanın tam yolu
-EXCEL_FILE = os.path.join(os.path.dirname(__file__), "lojistik.xlsx")
+EXCEL_FILE = r"C:\Users\nisak\OneDrive\lojistik.xlsx"
+
 
 @app.route("/", methods=["GET", "POST"])
 def form():
