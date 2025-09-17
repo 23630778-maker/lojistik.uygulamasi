@@ -16,15 +16,15 @@ app.secret_key = "supersecretkey"
 # Dosya yolları
 # -------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CREDENTIALS_FILE = r"C:/Users/nisak/OneDrive/credentials.json"  # Google client secret
-EXCEL_FILE_LOCAL = r"C:/Users/nisak/OneDrive/lojistik.xlsx"     # Lokal Excel dosyası
-EXCEL_FILE_ONEDRIVE = os.path.join(BASE_DIR, "OneDrive_lojistik.xlsx")  # Yedek kopya
+EXCEL_FILE_LOCAL = os.path.join(BASE_DIR, "lojistik.xlsx")  # lokal kopya
+EXCEL_FILE_ONEDRIVE = os.path.join(BASE_DIR, "OneDrive_lojistik.xlsx")  # yedek kopya
 
 # -------------------------
 # Google Drive ayarları
 # -------------------------
 EXCEL_FILE_DRIVE_ID = "1Rvg3nQkHsVjh9QicnU5ViYvzJm1EwO8T"  # Drive Excel ID
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
+CREDENTIALS_FILE = os.path.join(BASE_DIR, "credentials.json")  # client secret dosyası
 
 # -------------------------
 # Google Drive servis fonksiyonları
