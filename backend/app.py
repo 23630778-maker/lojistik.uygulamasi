@@ -2,10 +2,11 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from datetime import datetime
 import os
 import io
+import json
 import openpyxl
 from openpyxl import Workbook, load_workbook
 import shutil
-from google_auth_oauthlib.flow import InstalledAppFlow
+from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
 
@@ -24,14 +25,18 @@ EXCEL_FILE_ONEDRIVE = os.path.join(BASE_DIR, "OneDrive_lojistik.xlsx")  # yedek 
 # -------------------------
 EXCEL_FILE_DRIVE_ID = "1Rvg3nQkHsVjh9QicnU5ViYvzJm1EwO8T"  # Drive Excel ID
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
-CREDENTIALS_FILE = os.path.join(BASE_DIR, "credentials.json")  # client secret dosyası
 
 # -------------------------
 # Google Drive servis fonksiyonları
 # -------------------------
 def get_drive_service():
-    flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
-    creds = flow.run_local_server(port=0)
+    # Render environment'tan credentials çekiyoruz
+    credentials_json = os.environ.get("GOOGLE_CREDENTIALS_JSON")
+    if not credentials_json:
+        raise Exception("GOOGLE_CREDENTIALS_JSON environment variable bulunamadı")
+
+    credentials_info = json.loads(credentials_json)
+    creds = service_account.Credentials.from_service_account_info(credentials_info, scopes=SCOPES)
     service = build('drive', 'v3', credentials=creds)
     return service
 
